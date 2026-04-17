@@ -1,12 +1,8 @@
 import React from "react";
 import { Header } from "../components/ui/Header";
 import { User, Bell, Shield, HelpCircle, LogOut, ChevronRight, Info } from "lucide-react";
-import { storage } from "../services/storageService";
-import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
-  const navigate = useNavigate();
-
   const handleReset = () => {
     if (window.confirm("Sei sicuro di voler resettare tutti i dati?")) {
       localStorage.clear();

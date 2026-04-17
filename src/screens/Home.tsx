@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Plus, Heart, User, ChevronRight, Gift } from "lucide-react";
+import { Plus, Heart, User, ChevronRight, Gift, House } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -156,7 +156,7 @@ export default function Home() {
       {/* Bottom Nav Placeholder */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t border-gray-100 px-8 py-4 flex justify-between items-center z-50">
         <button onClick={() => navigate("/home")} className="text-[#1a1a1a]">
-          <HomeIcon size={24} />
+          <House size={24} />
         </button>
         <button onClick={() => navigate("/shortlist")} className="text-gray-300 hover:text-[#1a1a1a]">
           <Heart size={24} />
@@ -166,24 +166,5 @@ export default function Home() {
         </button>
       </nav>
     </div>
-  );
-}
-
-function HomeIcon({ size, className }: { size: number, className?: string }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
   );
 }

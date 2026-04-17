@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Header } from "../components/ui/Header";
 import { Button } from "../components/ui/Button";
@@ -49,7 +48,7 @@ export default function IdeaDetail() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
         <div className="absolute top-0 left-0 right-0">
-          <Header showBack={true} onBack={() => navigate(-1)} />
+          <Header onBack={() => navigate(-1)} />
         </div>
         
         <button 
