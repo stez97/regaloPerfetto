@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "../components/ui/Header";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { Heart, ChevronRight, Gift, Sparkles } from "lucide-react";
+import { Heart, ChevronRight, Sparkles } from "lucide-react";
 import { recommendationService } from "../services/recommendationService";
 import { shortlistService } from "../services/shortlistService";
 import { GiftIdea, Recipient, GuidedSession } from "../types";

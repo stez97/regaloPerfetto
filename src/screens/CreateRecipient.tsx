@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../components/ui/Header";
 import { Button } from "../components/ui/Button";
@@ -138,7 +137,7 @@ export default function CreateRecipient() {
               onChange={(e) => setCustomInterest(e.target.value)}
               placeholder="Aggiungi altro..."
               className="flex-1 bg-gray-50 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#1a1a1a]"
-              onKeyPress={(e) => e.key === "Enter" && addCustomInterest()}
+              onKeyDown={(e) => e.key === "Enter" && addCustomInterest()}
             />
             <Button size="sm" variant="outline" onClick={addCustomInterest}>
               Aggiungi
