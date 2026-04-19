@@ -1,97 +1,158 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { useNavigate } from "react-router-dom";
+import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Header } from "../components/ui/Header";
-import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Heart, Trash2, ChevronRight } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { ScreenProps } from "../navigation";
 import { shortlistService } from "../services/shortlistService";
 import { GiftIdea } from "../types";
+import { theme } from "../theme";
 
-export default function Shortlist() {
-  const navigate = useNavigate();
+export default function Shortlist({ navigation }: ScreenProps<"Shortlist">) {
+  const isFocused = useIsFocused();
   const [items, setItems] = useState<GiftIdea[]>([]);
 
   useEffect(() => {
-    setItems(shortlistService.getAll());
-  }, []);
+    if (!isFocused) {
+      return;
+    }
 
-  const handleRemove = (id: string) => {
-    shortlistService.remove(id);
-    setItems(items.filter(item => item.id !== id));
-  };
+    async function loadItems() {
+      setItems(await shortlistService.getAll());
+    }
+
+    void loadItems();
+  }, [isFocused]);
+
+  async function handleRemove(id: string) {
+    await shortlistService.remove(id);
+    setItems((current) => current.filter((item) => item.id !== id));
+  }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#fdfcfb] overflow-y-auto pb-12">
-      <Header title="La tua Shortlist" />
-      
-      <div className="p-6">
+    <View style={styles.screen}>
+      <Header title="La tua shortlist" />
+      <ScrollView contentContainerStyle={styles.content}>
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-              <Heart size={32} className="text-gray-200" />
-            </div>
-            <h2 className="text-xl font-serif font-bold mb-2">Ancora nulla qui</h2>
-            <p className="text-gray-400 text-sm mb-8 max-w-[240px]">
+          <View style={styles.emptyWrap}>
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="heart-outline" size={28} color={theme.colors.muted} />
+            </View>
+            <Text style={styles.emptyTitle}>Ancora nulla qui</Text>
+            <Text style={styles.emptyText}>
               Salva le idee che ti piacciono di più per confrontarle e scegliere con calma.
-            </p>
-            <Button variant="outline" onClick={() => navigate("/home")}>
+            </Text>
+            <Button variant="outline" onPress={() => navigation.navigate("Home")}>
               Inizia a cercare
             </Button>
-          </div>
+          </View>
         ) : (
-          <div className="space-y-6">
-            <p className="text-sm text-gray-400 mb-2">
+          <View>
+            <Text style={styles.countText}>
               Hai salvato {items.length} {items.length === 1 ? "idea" : "idee"}.
-            </p>
-            
-            <AnimatePresence>
-              {items.map((idea) => (
-                <motion.div
-                  key={idea.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  layout
-                >
-                  <Card 
-                    className="p-4 flex gap-4 relative"
-                    onClick={() => navigate(`/idea/${idea.id}`, { state: { idea } })}
-                  >
-                    <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-                      <img 
-                        src={`https://picsum.photos/seed/${idea.id}/200/200`} 
-                        alt={idea.title}
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 pr-8">
-                      <h4 className="font-bold text-sm mb-1 truncate">{idea.title}</h4>
-                      <p className="text-xs text-gray-400 line-clamp-2 mb-2">{idea.summary}</p>
-                      <span className="text-xs font-bold">{idea.priceRange}</span>
-                    </div>
-                    
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(idea.id);
-                      }}
-                      className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                    
-                    <div className="absolute bottom-4 right-4">
-                      <ChevronRight size={18} className="text-gray-200" />
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+            </Text>
+            {items.map((idea) => (
+              <Card
+                key={idea.id}
+                style={styles.ideaCard}
+                onPress={() => navigation.navigate("IdeaDetail", { idea })}
+              >
+                <View style={styles.ideaIcon}>
+                  <Ionicons name="gift-outline" size={22} color={theme.colors.text} />
+                </View>
+                <View style={styles.ideaBody}>
+                  <Text style={styles.ideaTitle}>{idea.title}</Text>
+                  <Text style={styles.ideaSummary}>{idea.summary}</Text>
+                  <Text style={styles.ideaPrice}>{idea.priceRange}</Text>
+                </View>
+                <Pressable onPress={() => void handleRemove(idea.id)} style={styles.removeButton}>
+                  <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
+                </Pressable>
+              </Card>
+            ))}
+          </View>
         )}
-      </div>
-    </div>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: theme.colors.background,
+    flex: 1,
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  emptyWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+  },
+  emptyIconWrap: {
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    borderRadius: theme.radius.pill,
+    height: 72,
+    justifyContent: "center",
+    marginBottom: 20,
+    width: 72,
+  },
+  emptyTitle: {
+    color: theme.colors.text,
+    fontSize: 24,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  emptyText: {
+    color: theme.colors.muted,
+    lineHeight: 22,
+    marginBottom: 24,
+    maxWidth: 260,
+    textAlign: "center",
+  },
+  countText: {
+    color: theme.colors.muted,
+    marginBottom: 12,
+  },
+  ideaCard: {
+    flexDirection: "row",
+    marginBottom: 14,
+    padding: 16,
+  },
+  ideaIcon: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.radius.md,
+    height: 56,
+    justifyContent: "center",
+    marginRight: 14,
+    width: 56,
+  },
+  ideaBody: {
+    flex: 1,
+  },
+  ideaTitle: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  ideaSummary: {
+    color: theme.colors.muted,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  ideaPrice: {
+    color: theme.colors.text,
+    fontWeight: "700",
+  },
+  removeButton: {
+    paddingLeft: 12,
+    paddingTop: 4,
+  },
+});

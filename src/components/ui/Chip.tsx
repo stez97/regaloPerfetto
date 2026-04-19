@@ -1,25 +1,47 @@
 import React from "react";
-import { motion } from "motion/react";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { theme } from "../../theme";
 
 interface ChipProps {
   label: string;
   selected?: boolean;
-  onClick?: () => void;
-  className?: string;
+  onPress?: () => void;
 }
 
-export const Chip: React.FC<ChipProps> = ({ label, selected = false, onClick, className = "" }) => {
+export function Chip({ label, selected = false, onPress }: ChipProps) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-        selected 
-          ? "bg-[#1a1a1a] text-white border-[#1a1a1a]" 
-          : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-      } ${className}`}
-    >
-      {label}
-    </motion.button>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.base, selected ? styles.selected : styles.idle, pressed && styles.pressed]}>
+      <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
+    </Pressable>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  base: {
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    marginBottom: 10,
+    marginRight: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  idle: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+  },
+  selected: {
+    backgroundColor: theme.colors.text,
+    borderColor: theme.colors.text,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
+  label: {
+    color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  selectedLabel: {
+    color: theme.colors.surface,
+  },
+});

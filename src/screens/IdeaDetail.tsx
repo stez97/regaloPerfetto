@@ -1,127 +1,226 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Header } from "../components/ui/Header";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { Heart, ShoppingBag, Info, CheckCircle2, ExternalLink } from "lucide-react";
+import { ScreenProps } from "../navigation";
 import { shortlistService } from "../services/shortlistService";
-import { GiftIdea } from "../types";
+import { Product } from "../types";
+import { theme } from "../theme";
 
-export default function IdeaDetail() {
-  const { id } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [idea, setIdea] = useState<GiftIdea | null>(location.state?.idea || null);
+export default function IdeaDetail({ route }: ScreenProps<"IdeaDetail">) {
+  const { idea } = route.params;
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    if (!idea && id) {
-      // In a real app, fetch by ID. Here we'll just redirect if missing
-      navigate("/home");
+    async function syncSavedState() {
+      setIsSaved(await shortlistService.isSaved(idea.id));
     }
-    if (idea) {
-      setIsSaved(shortlistService.isSaved(idea.id));
-    }
-  }, [idea, id, navigate]);
 
-  const toggleSave = () => {
-    if (!idea) return;
+    void syncSavedState();
+  }, [idea.id]);
+
+  async function toggleSave() {
     if (isSaved) {
-      shortlistService.remove(idea.id);
+      await shortlistService.remove(idea.id);
       setIsSaved(false);
-    } else {
-      shortlistService.add(idea);
-      setIsSaved(true);
+      return;
     }
-  };
 
-  if (!idea) return null;
+    await shortlistService.add(idea);
+    setIsSaved(true);
+  }
 
   return (
-    <div className="flex-1 flex flex-col bg-white overflow-y-auto pb-24">
-      <div className="relative h-[40vh]">
-        <img 
-          src={`https://picsum.photos/seed/${idea.id}/1200/800`} 
-          alt={idea.title}
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
-        <div className="absolute top-0 left-0 right-0">
-          <Header onBack={() => navigate(-1)} />
-        </div>
-        
-        <button 
-          onClick={toggleSave}
-          className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-white shadow-xl flex items-center justify-center text-[#1a1a1a] z-10"
-        >
-          <Heart size={28} fill={isSaved ? "#ef4444" : "none"} className={isSaved ? "text-red-500 border-none" : ""} />
-        </button>
-      </div>
-
-      <div className="px-6 -mt-12 relative z-20">
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50">
-          <div className="flex gap-2 mb-4">
-            {idea.tags.map(tag => (
-              <span key={tag} className="px-3 py-1 rounded-full bg-[#f5f2ed] text-[#1a1a1a] text-[10px] uppercase tracking-widest font-bold">
-                {tag}
-              </span>
+    <View style={styles.screen}>
+      <Header title="Dettaglio idea" />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <Ionicons name="gift-outline" size={38} color={theme.colors.surface} />
+          </View>
+          <Text style={styles.title}>{idea.title}</Text>
+          <Text style={styles.summary}>{idea.summary}</Text>
+          <View style={styles.tagsRow}>
+            {idea.tags.map((tag: string) => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
             ))}
-          </div>
-          
-          <h1 className="text-3xl font-serif font-bold mb-4 leading-tight">{idea.title}</h1>
-          <p className="text-gray-500 leading-relaxed mb-8">{idea.summary}</p>
-          
-          <div className="space-y-6">
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <Info size={18} className="text-[#d4af37]" />
-                <h3 className="text-sm font-bold uppercase tracking-widest">Perché questo regalo?</h3>
-              </div>
-              <div className="bg-[#fdfcfb] p-6 rounded-2xl border border-gray-50 italic text-gray-600 leading-relaxed">
-                "{idea.reasoning}"
-              </div>
-            </section>
+          </View>
+        </View>
 
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <ShoppingBag size={18} className="text-[#d4af37]" />
-                <h3 className="text-sm font-bold uppercase tracking-widest">Prodotti consigliati</h3>
-              </div>
-              
-              <div className="space-y-4">
-                {idea.products.map((product, idx) => (
-                  <Card key={idx} className="p-4 flex justify-between items-center border-gray-100">
-                    <div>
-                      <h4 className="font-bold text-sm">{product.name}</h4>
-                      <p className="text-xs text-gray-400">{product.merchant}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-sm mb-1">{product.price}</div>
-                      <button className="text-[#d4af37] flex items-center gap-1 text-[10px] font-bold uppercase tracking-tighter">
-                        Compra <ExternalLink size={10} />
-                      </button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
+        <Card style={styles.infoCard}>
+          <View style={styles.infoHeader}>
+            <Ionicons name="information-circle-outline" size={18} color={theme.colors.accent} />
+            <Text style={styles.infoTitle}>Perché questo regalo?</Text>
+          </View>
+          <Text style={styles.reasoning}>{idea.reasoning}</Text>
+        </Card>
 
-            <section className="pt-4">
-              <div className="flex items-center gap-3 text-sm text-gray-500 bg-gray-50 p-4 rounded-2xl">
-                <CheckCircle2 size={20} className="text-green-500 flex-shrink-0" />
-                <p>Questa idea rispetta il tuo budget di <strong>{idea.priceRange}</strong>.</p>
-              </div>
-            </section>
-          </div>
-        </div>
-      </div>
+        <Text style={styles.sectionTitle}>Prodotti consigliati</Text>
+        {idea.products.map((product: Product) => (
+          <Card key={product.name} style={styles.productCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.productName}>{product.name}</Text>
+              <Text style={styles.productMerchant}>{product.merchant}</Text>
+            </View>
+            <View style={styles.productPriceWrap}>
+              <Text style={styles.productPrice}>{product.price}</Text>
+              <Text style={styles.productLink}>Compra</Text>
+            </View>
+          </Card>
+        ))}
 
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-white/80 backdrop-blur-lg border-t border-gray-50 z-50">
-        <Button fullWidth size="lg">
-          Scegli questo regalo
+        <View style={styles.budgetBox}>
+          <Ionicons name="checkmark-circle-outline" size={20} color={theme.colors.success} />
+          <Text style={styles.budgetText}>Questa idea rispetta il tuo budget di {idea.priceRange}.</Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <Button variant={isSaved ? "secondary" : "primary"} fullWidth size="lg" onPress={() => void toggleSave()}>
+          {isSaved ? "Rimuovi dalla shortlist" : "Salva nella shortlist"}
         </Button>
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: theme.colors.surface,
+    flex: 1,
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 120,
+  },
+  hero: {
+    backgroundColor: theme.colors.text,
+    borderRadius: theme.radius.xl,
+    marginBottom: 20,
+    padding: 24,
+  },
+  heroIcon: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 24,
+    height: 68,
+    justifyContent: "center",
+    marginBottom: 20,
+    width: 68,
+  },
+  title: {
+    color: theme.colors.surface,
+    fontSize: 30,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  summary: {
+    color: "#d1d5db",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  tagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  tag: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: theme.radius.pill,
+    marginBottom: 8,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  tagText: {
+    color: theme.colors.surface,
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  infoCard: {
+    marginBottom: 20,
+    padding: 20,
+  },
+  infoHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  infoTitle: {
+    color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    marginLeft: 8,
+    textTransform: "uppercase",
+  },
+  reasoning: {
+    color: theme.colors.muted,
+    fontSize: 15,
+    fontStyle: "italic",
+    lineHeight: 22,
+  },
+  sectionTitle: {
+    color: theme.colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  productCard: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 12,
+    padding: 16,
+  },
+  productName: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  productMerchant: {
+    color: theme.colors.muted,
+  },
+  productPriceWrap: {
+    alignItems: "flex-end",
+    marginLeft: 12,
+  },
+  productPrice: {
+    color: theme.colors.text,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  productLink: {
+    color: theme.colors.accent,
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  budgetBox: {
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    borderRadius: theme.radius.lg,
+    flexDirection: "row",
+    marginTop: 8,
+    padding: 16,
+  },
+  budgetText: {
+    color: theme.colors.muted,
+    flex: 1,
+    marginLeft: 10,
+  },
+  footer: {
+    backgroundColor: theme.colors.surface,
+    borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    bottom: 0,
+    left: 0,
+    padding: 24,
+    position: "absolute",
+    right: 0,
+  },
+});

@@ -1,85 +1,202 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Header } from "../components/ui/Header";
-import { User, Bell, Shield, HelpCircle, LogOut, ChevronRight, Info } from "lucide-react";
+import { ScreenProps } from "../navigation";
+import { storage } from "../services/storageService";
+import { theme } from "../theme";
 
-export default function Settings() {
-  const handleReset = () => {
-    if (window.confirm("Sei sicuro di voler resettare tutti i dati?")) {
-      localStorage.clear();
-      window.location.href = "/";
-    }
-  };
+const menuItems = [
+  { icon: "person-outline", label: "Profilo", detail: "Gestisci i tuoi dati" },
+  { icon: "notifications-outline", label: "Notifiche", detail: "Promemoria compleanni" },
+  { icon: "shield-outline", label: "Privacy", detail: "Sicurezza e dati" },
+  { icon: "help-circle-outline", label: "Supporto", detail: "Domande frequenti" },
+] as const;
 
-  const menuItems = [
-    { icon: User, label: "Profilo", detail: "Gestisci i tuoi dati" },
-    { icon: Bell, label: "Notifiche", detail: "Promemoria compleanni" },
-    { icon: Shield, label: "Privacy", detail: "Sicurezza e dati" },
-    { icon: HelpCircle, label: "Supporto", detail: "Domande frequenti" },
-  ];
+export default function Settings({ navigation }: ScreenProps<"Settings">) {
+  function handleReset() {
+    Alert.alert("Reset dati", "Sei sicuro di voler resettare tutti i dati salvati nell'app?", [
+      { text: "Annulla", style: "cancel" },
+      {
+        text: "Resetta",
+        style: "destructive",
+        onPress: () => {
+          void storage.clearNamespace().then(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Onboarding" }],
+            });
+          });
+        },
+      },
+    ]);
+  }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#fdfcfb] overflow-y-auto">
+    <View style={styles.screen}>
       <Header title="Impostazioni" />
-      
-      <div className="p-6 space-y-8">
-        {/* Profile Header */}
-        <div className="flex items-center gap-4 p-4 bg-white rounded-3xl border border-gray-50 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-[#f5f2ed] flex items-center justify-center border border-gray-100">
-            <User size={32} className="text-[#1a1a1a]" />
-          </div>
-          <div>
-            <h3 className="font-serif font-bold text-lg">Utente Demo</h3>
-            <p className="text-xs text-gray-400">stefano.pandini97@gmail.com</p>
-          </div>
-        </div>
 
-        {/* Menu */}
-        <section className="space-y-2">
-          {menuItems.map((item, idx) => (
-            <button 
-              key={idx}
-              className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-50 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
-                  <item.icon size={20} className="text-gray-400" />
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-bold">{item.label}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{item.detail}</div>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-gray-200" />
-            </button>
+      <View style={styles.content}>
+        <View style={styles.profileCard}>
+          <View style={styles.profileAvatar}>
+            <Ionicons name="person-outline" size={32} color={theme.colors.text} />
+          </View>
+          <View>
+            <Text style={styles.profileName}>Utente Demo</Text>
+            <Text style={styles.profileEmail}>demo@regaloperfetto.app</Text>
+          </View>
+        </View>
+
+        <View>
+          {menuItems.map((item) => (
+            <View key={item.label} style={styles.menuCard}>
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIcon}>
+                  <Ionicons name={item.icon} size={20} color={theme.colors.muted} />
+                </View>
+                <View>
+                  <Text style={styles.menuTitle}>{item.label}</Text>
+                  <Text style={styles.menuDetail}>{item.detail}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
+            </View>
           ))}
-        </section>
+        </View>
 
-        {/* App Info */}
-        <section className="p-6 bg-[#f5f2ed] rounded-3xl space-y-4">
-          <div className="flex items-center gap-2 text-[#1a1a1a]">
-            <Info size={18} />
-            <h4 className="text-sm font-bold uppercase tracking-widest">Info Prototipo</h4>
-          </div>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            Questo è un prototipo funzionale di <strong>RegaloPerfetto</strong>. I dati sono salvati localmente nel tuo browser.
-          </p>
-          <div className="flex justify-between text-[10px] text-gray-400 font-medium pt-2">
-            <span>Versione 1.0.0 (Beta)</span>
-            <span>Build 2026.04.11</span>
-          </div>
-        </section>
+        <View style={styles.infoBox}>
+          <View style={styles.infoHeader}>
+            <Ionicons name="information-circle-outline" size={18} color={theme.colors.text} />
+            <Text style={styles.infoTitle}>Info prototipo</Text>
+          </View>
+          <Text style={styles.infoText}>
+            Questa versione usa dati locali e un motore di raccomandazione simulato per funzionare in Expo Go.
+          </Text>
+          <Text style={styles.infoVersion}>Versione 1.0.0</Text>
+        </View>
 
-        {/* Danger Zone */}
-        <section className="pt-4">
-          <button 
-            onClick={handleReset}
-            className="w-full flex items-center justify-center gap-2 p-4 text-red-500 font-bold text-sm border border-red-100 rounded-2xl hover:bg-red-50 transition-colors"
-          >
-            <LogOut size={18} />
-            Resetta tutti i dati
-          </button>
-        </section>
-      </div>
-    </div>
+        <Pressable onPress={handleReset} style={styles.resetButton}>
+          <Ionicons name="trash-outline" size={18} color={theme.colors.danger} />
+          <Text style={styles.resetText}>Resetta tutti i dati</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: theme.colors.background,
+    flex: 1,
+  },
+  content: {
+    padding: 24,
+  },
+  profileCard: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginBottom: 24,
+    padding: 16,
+  },
+  profileAvatar: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.radius.pill,
+    height: 64,
+    justifyContent: "center",
+    marginRight: 16,
+    width: 64,
+  },
+  profileName: {
+    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  profileEmail: {
+    color: theme.colors.muted,
+    marginTop: 4,
+  },
+  menuCard: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    padding: 16,
+  },
+  menuLeft: {
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  menuIcon: {
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    borderRadius: theme.radius.md,
+    height: 40,
+    justifyContent: "center",
+    marginRight: 14,
+    width: 40,
+  },
+  menuTitle: {
+    color: theme.colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  menuDetail: {
+    color: theme.colors.muted,
+    fontSize: 12,
+    marginTop: 4,
+    textTransform: "uppercase",
+  },
+  infoBox: {
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.radius.xl,
+    marginTop: 8,
+    padding: 20,
+  },
+  infoHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  infoTitle: {
+    color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginLeft: 8,
+    textTransform: "uppercase",
+  },
+  infoText: {
+    color: theme.colors.muted,
+    lineHeight: 22,
+  },
+  infoVersion: {
+    color: theme.colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+  resetButton: {
+    alignItems: "center",
+    borderColor: "#fecaca",
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+    padding: 16,
+  },
+  resetText: {
+    color: theme.colors.danger,
+    fontWeight: "800",
+    marginLeft: 8,
+  },
+});

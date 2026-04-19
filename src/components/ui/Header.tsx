@@ -1,6 +1,9 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { ChevronLeft, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from "../../theme";
 
 interface HeaderProps {
   title?: string;
@@ -9,31 +12,77 @@ interface HeaderProps {
   onBack?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, showBack = true, showSettings = false, onBack }) => {
-  const navigate = useNavigate();
-  
+export function Header({ title, showBack = true, showSettings = false, onBack }: HeaderProps) {
+  const navigation = useNavigation();
+
   return (
-    <header className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-50">
-      <div className="flex items-center gap-4">
-        {showBack && (
-          <button 
-            onClick={onBack || (() => navigate(-1))}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.left}>
+          {showBack ? (
+            <Pressable
+              onPress={onBack ?? (() => navigation.goBack())}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="chevron-back" size={22} color={theme.colors.text} />
+            </Pressable>
+          ) : (
+            <View style={styles.placeholder} />
+          )}
+          {title ? <Text style={styles.title}>{title}</Text> : null}
+        </View>
+
+        {showSettings ? (
+          <Pressable
+            onPress={() => navigation.navigate("Settings" as never)}
+            style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
           >
-            <ChevronLeft size={24} />
-          </button>
+            <Ionicons name="settings-outline" size={20} color={theme.colors.text} />
+          </Pressable>
+        ) : (
+          <View style={styles.placeholder} />
         )}
-        {title && <h1 className="text-xl font-serif font-bold">{title}</h1>}
-      </div>
-      
-      {showSettings && (
-        <button 
-          onClick={() => navigate("/settings")}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <Settings size={20} />
-        </button>
-      )}
-    </header>
+      </View>
+    </SafeAreaView>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: theme.colors.surface,
+  },
+  container: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  left: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+  },
+  title: {
+    color: theme.colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    marginLeft: 12,
+  },
+  iconButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.radius.pill,
+    height: 40,
+    justifyContent: "center",
+    width: 40,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
+  placeholder: {
+    height: 40,
+    width: 40,
+  },
+});

@@ -1,103 +1,118 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Button } from "../components/ui/Button";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ScreenProps } from "../navigation";
 import { storage } from "../services/storageService";
-import { useNavigate } from "react-router-dom";
+import { theme } from "../theme";
+import { Button } from "../components/ui/Button";
 
 const slides = [
   {
     title: "Trova regali che contano",
     description: "Dimentica i regali banali. Scopri idee pensate appositamente per chi ami.",
-    image: "https://picsum.photos/seed/gift1/800/1200"
+    image: "https://picsum.photos/seed/gift1/900/1600",
   },
   {
     title: "Lasciati guidare",
-    description: "Poche domande mirate per capire i gusti e le passioni del destinatario.",
-    image: "https://picsum.photos/seed/gift2/800/1200"
+    description: "Poche domande mirate per capire gusti, budget e occasione.",
+    image: "https://picsum.photos/seed/gift2/900/1600",
   },
   {
     title: "Scegli con fiducia",
-    description: "Salva le migliori idee e trova il prodotto perfetto in pochi click.",
-    image: "https://picsum.photos/seed/gift3/800/1200"
-  }
+    description: "Salva le migliori idee e confrontale con calma prima di decidere.",
+    image: "https://picsum.photos/seed/gift3/900/1600",
+  },
 ];
 
-interface OnboardingProps {
-  onComplete: () => void;
-}
-
-export default function Onboarding({ onComplete }: OnboardingProps) {
+export default function Onboarding({ navigation }: ScreenProps<"Onboarding">) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
 
-  const handleNext = () => {
+  async function handleNext() {
     if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
-    } else {
-      storage.set("onboarding_completed", true);
-      onComplete();
-      navigate("/home");
+      setCurrentSlide((value) => value + 1);
+      return;
     }
-  };
+
+    await storage.set("onboarding_completed", true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
+  }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
-      <div className="relative flex-1 overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
-          >
-            <img 
-              src={slides[currentSlide].image} 
-              alt={slides[currentSlide].title}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            
-            <div className="absolute bottom-32 left-0 right-0 p-8 text-white">
-              <motion.h2 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-4xl font-serif font-bold mb-4"
-              >
-                {slides[currentSlide].title}
-              </motion.h2>
-              <motion.p 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-lg text-white/80 font-light leading-relaxed"
-              >
-                {slides[currentSlide].description}
-              </motion.p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+    <ImageBackground source={{ uri: slides[currentSlide].image }} style={styles.background}>
+      <View style={styles.overlay} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>{slides[currentSlide].title}</Text>
+          <Text style={styles.description}>{slides[currentSlide].description}</Text>
+        </View>
 
-      <div className="p-8 bg-white safe-area-bottom">
-        <div className="flex gap-2 mb-8">
-          {slides.map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === currentSlide ? "w-8 bg-[#1a1a1a]" : "w-2 bg-gray-200"
-              }`} 
-            />
-          ))}
-        </div>
-        
-        <Button fullWidth size="lg" onClick={handleNext}>
-          {currentSlide === slides.length - 1 ? "Inizia ora" : "Continua"}
-        </Button>
-      </div>
-    </div>
+        <View style={styles.footer}>
+          <View style={styles.dots}>
+            {slides.map((slide, index) => (
+              <View key={slide.title} style={[styles.dot, index === currentSlide && styles.dotActive]} />
+            ))}
+          </View>
+          <Button fullWidth size="lg" onPress={() => void handleNext()}>
+            {currentSlide === slides.length - 1 ? "Inizia ora" : "Continua"}
+          </Button>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  content: {
+    marginTop: "auto",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  title: {
+    color: theme.colors.surface,
+    fontSize: 38,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  description: {
+    color: "#f3f4f6",
+    fontSize: 18,
+    lineHeight: 28,
+  },
+  footer: {
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.radius.xl,
+    borderTopRightRadius: theme.radius.xl,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 28,
+  },
+  dots: {
+    flexDirection: "row",
+    marginBottom: 20,
+  },
+  dot: {
+    backgroundColor: "#d1d5db",
+    borderRadius: theme.radius.pill,
+    height: 6,
+    marginRight: 8,
+    width: 10,
+  },
+  dotActive: {
+    backgroundColor: theme.colors.text,
+    width: 28,
+  },
+});

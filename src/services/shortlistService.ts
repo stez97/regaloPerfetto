@@ -4,23 +4,28 @@ import { storage } from "./storageService";
 const SHORTLIST_KEY = "shortlist";
 
 export const shortlistService = {
-  getAll: (): GiftIdea[] => {
-    return storage.get<GiftIdea[]>(SHORTLIST_KEY) || [];
+  async getAll(): Promise<GiftIdea[]> {
+    return (await storage.get<GiftIdea[]>(SHORTLIST_KEY)) ?? [];
   },
-  
-  add: (idea: GiftIdea): void => {
-    const shortlist = shortlistService.getAll();
-    if (!shortlist.find(i => i.id === idea.id)) {
-      storage.set(SHORTLIST_KEY, [idea, ...shortlist]);
+
+  async add(idea: GiftIdea): Promise<void> {
+    const shortlist = await shortlistService.getAll();
+
+    if (!shortlist.some((item) => item.id === idea.id)) {
+      await storage.set(SHORTLIST_KEY, [idea, ...shortlist]);
     }
   },
-  
-  remove: (id: string): void => {
-    const shortlist = shortlistService.getAll().filter(i => i.id !== id);
-    storage.set(SHORTLIST_KEY, shortlist);
+
+  async remove(id: string): Promise<void> {
+    const shortlist = await shortlistService.getAll();
+    await storage.set(
+      SHORTLIST_KEY,
+      shortlist.filter((item) => item.id !== id),
+    );
   },
-  
-  isSaved: (id: string): boolean => {
-    return !!shortlistService.getAll().find(i => i.id === id);
-  }
+
+  async isSaved(id: string): Promise<boolean> {
+    const shortlist = await shortlistService.getAll();
+    return shortlist.some((item) => item.id === id);
+  },
 };

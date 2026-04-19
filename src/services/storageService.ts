@@ -1,17 +1,27 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const PREFIX = "regaloperfetto_";
 
 export const storage = {
-  get: <T>(key: string): T | null => {
-    const data = localStorage.getItem(`regaloperfetto_${key}`);
-    return data ? JSON.parse(data) : null;
+  async get<T>(key: string): Promise<T | null> {
+    const data = await AsyncStorage.getItem(`${PREFIX}${key}`);
+    return data ? JSON.parse(data) as T : null;
   },
-  set: <T>(key: string, value: T): void => {
-    localStorage.setItem(`regaloperfetto_${key}`, JSON.stringify(value));
+
+  async set<T>(key: string, value: T): Promise<void> {
+    await AsyncStorage.setItem(`${PREFIX}${key}`, JSON.stringify(value));
   },
-  remove: (key: string): void => {
-    localStorage.removeItem(`regaloperfetto_${key}`);
-  }
+
+  async remove(key: string): Promise<void> {
+    await AsyncStorage.removeItem(`${PREFIX}${key}`);
+  },
+
+  async clearNamespace(): Promise<void> {
+    const keys = await AsyncStorage.getAllKeys();
+    const namespacedKeys = keys.filter((key: string) => key.startsWith(PREFIX));
+
+    if (namespacedKeys.length > 0) {
+      await AsyncStorage.multiRemove(namespacedKeys);
+    }
+  },
 };
